@@ -13,6 +13,6 @@ do
     python3 ./mdp-gen.py -n $N -t $T -s $S
     mv mdp-n$N-k$K-t$T-s$S.cnf ../files/mdp-$N-$S-sat.cnf
     python3 ./mdp-gen.py -n $N -t $T1 -s $S
-    mv mdp-n$N-k$K-t$T1-s$S.cnf ../files/mdp-$N-$S-unsat.cnf
+    mv mdp-n$N-k$K-t$T1-s$S.cnf ../files/mdp-$N-$S-possibly-unsat.cnf
   done
 done
