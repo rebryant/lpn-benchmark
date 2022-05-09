@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 #####################################################################################
 # Copyright (c) 2022 Randal E. Bryant, Carnegie Mellon University
 # 
@@ -17,7 +19,7 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ########################################################################################
 
-# Learning Parity with Noise (LPN) benchmark generator
+# Learning Parity with Noise (MDP) benchmark generator
 # Based on Minimal Disagreement Parity benchmark devised by Crawford
 # http://www.cs.cornell.edu/selman/docs/crawford-parity.pdf
 # Use different encoding than presented in paper:
@@ -337,7 +339,7 @@ def run(name, args):
     if numTolerated < 0:
         numTolerated = numCorrupt
 
-    base = "lpn"
+    base = "mdp"
     if fixed:
         base += "-fixed"
     if exclude:

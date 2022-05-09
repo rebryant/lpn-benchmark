@@ -1,7 +1,7 @@
-# Learning Parity with Noise (LPN) SAT benchmark
+# Minimal Disagreement Parity (MDP) benchmark
 
 This repository contains a generator and benchmark files for the Learning Parity with Noise SAT benchmark.
-See the file doc/lpn.pdf for more information.
+See the file doc/mdp.pdf for more information.
 
 Subdirectories:
 
