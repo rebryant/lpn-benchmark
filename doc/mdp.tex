@@ -1,0 +1,178 @@
+\documentclass[10pt,conference]{IEEEtran}
+
+
+\usepackage{bm}
+%% Colored hyperlink 
+\usepackage{cite}
+\usepackage{hyperref}
+\newcommand{\cref}[2]{\href{#1}{#2}}
+%% Colored hyperlink showing link in TT font
+% \newcommand{\chref}[1]{\href{#1}{\small\tt \color{blue}#1}}
+\newcommand{\hcref}[1]{\cref{#1}{\small\tt #1}}
+\newcommand{\ints}[1]{{\cal N}_{#1}}
+\newcommand{\bset}{{\cal B}}
+\newcommand{\kissat}{{\sffamily\scshape kissat}}
+\newcommand{\Kissat}{{\sffamily\scshape  Kissat}}
+\newcommand{\cms}{{\sffamily\scshape  CryptoMiniSat}}
+\newcommand{\Cms}{{\sffamily\scshape  CryptoMiniSat}}
+
+
+\bibliographystyle{IEEEtran}
+
+\begin{document}
+
+\title{Minimum Disagreement Parity (MDP) Benchmark\thanks{This work was supported by the U. S. National Science Foundation under grant CCF-2108521}}
+
+\author{\IEEEauthorblockN{Randal E. Bryant}
+\IEEEauthorblockA{Computer Science Department \\
+Carnegie Mellon University, Pittsburgh, PA, United States\\
+Email: {\tt Randy.Bryant@cs.cmu.edu}}}
+
+\maketitle
+
+\section{Obtaining Benchmarks}
+
+The benchmark generator, files, and documentation are available at:
+\begin{center}
+\hcref{https://github.com/rebryant/mdp-benchmark}
+\end{center}
+
+\section{Description}
+
+Crawford, Kearns, and Shapire proposed the Minimum Disagreement Parity (MDP)
+Problem as a challenging SAT benchmark in an unpublished report from
+AT\&T Bell Laboratories in 1994~\cite{crawford:mdp:1994}.
+
+MDP is closely related to the ``Learning Parity with Noise'' (LPN)
+problem.  LPN has been proposed as the basis for public key
+crytographic systems~\cite{katz:crypto:2007}.  Unlike the widely used
+RSA cryptosystem, it is resistant to all known quantum
+algorithms~\cite{pietrzak:sofsem:2012}.  The capabilities of SAT
+solvers on MDP is therefore of interest to the cryptography community.
+We provide these benchmarks as a way to stimulate 
+the SAT community to expand beyond pure CDCL, incorporating other
+solution methods into their SAT solvers.
+
+Crawford wrote a benchmark generator in the 1990s and supplied several
+files to early SAT competitions with names of the form
+\texttt{par}$N$\texttt{-}$S$\texttt{.cnf}, where $N$ is the size
+parameter and $S$ is a random seed.
+These had values of $N \in \{8, 16, 32\}$.  These files are still available online at \hcref{https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html}.
+SAT solvers of that era were challenged by $N=16$ and
+could not possibly handle $N=32$.  Unfortunately, the code for his
+benchmark generator has disappeared.
+
+We wrote a new benchmark generator for the MDP problem.  In doing so, we
+added more options for problem parameters and encoding methods.  We
+also replaced the binary encoding of at-most-$k$ constraints with a
+more SAT-solver-friendly unary counter encoding~\cite{card}.
+
+\section{Problem Description}
+
+In the following, let $\bset = \{0, 1\}$ and $\ints{p} = \{1, 2, \ldots, p\}$.
+Assume all arithmetic is performed modulo 2.  Thus,
+if $a, b \in \bset$, then $a+b \equiv a \oplus b$.
+
+The problem is parameterized by a number of solution bits $n$, a
+number of samples $m$, and an error tolerance $k$, as follows.  Let
+$\bm{s} = s_1, s_2, \ldots, s_n$ be a set of {\em solution} bits.
+For $1 \leq j \leq m$, let $X_j \subseteq \ints{n}$
+be a {\em sample set}, created by generating $n$
+random bits $x_{1,j}, x_{2,j}, \ldots x_{n,j}$
+and letting $X_j = \{i | x_{i,j} = 1 \}$.  Let $\bm{y} = y_1, y_2, \ldots, y_m$ be the
+parities of the solution bits for each of the $m$ samples:
+\begin{eqnarray}
+y_j & = & \sum_{i \in X_j} s_i \label{eqn:uncorrupted}
+\end{eqnarray}
+
+Given enough many samples $m$ for there to be at least $n$ linearly
+independent sample sets, the values of the solution bits $\bm{s}$ can
+be uniquely determined from $\bm{y}$ and the sample sets $S_j$ for
+$1 \leq j \leq m$ by Gaussian elimination.  To make this problem
+challenging, we introduce ``noise,'' allowing up to $k$ of these
+samples to be ``corrupted'' by flipping the values of their parity.
+That is, let $T \subseteq \ints{m}$ be created by randomly choosing
+$k$ values from $\ints{m}$ without replacement, and define $m$
+``corruption'' bits $\bm{r} = r_1, r_2, \ldots, r_m$, with $r_j$ equal
+to $1$ if $j \in T$ and equal to $0$ otherwise.  
+We then provide noisy samples $\bm{y}'$, defined as:
+\begin{eqnarray}
+y'_j & = & r_j + \sum_{i \in X_j} s_i \label{eqn:corrupted}
+\end{eqnarray}
+and require the correct solution bits $\bm{s}$ to be determined despite this noise.  That is, the generated solution $\bm{s}$ must satisfy at least $m-k$ of equations (\ref{eqn:uncorrupted}).
+For larger values of $k$, the
+problem becomes NP-hard.
+
+This problem can readily be encoded in CNF with variables for
+unknown values $\bm{s}$ and $\bm{r}$, along with some auxilliary
+variables.  We further parameterize the problem with a value
+$t \leq k$, indicating the maximum number of corrupted samples accepted in the
+solution, where the problem should be satisfiable when $t = k$ but may
+become unsatisfiable for $t = k-1$.  Each of the $m$ equations
+(\ref{eqn:corrupted}) is encoded using auxilliary variables to avoid
+exponential expansion.  An at-most-$t$ constraint is imposed on the
+corruption bits $\bm{r}$.
+
+For $t=k$, the solution $\bm{s}$ is not guaranteed to be unique, but
+we allow any solution that satisfies at least $m-k$ of the constraints
+(\ref{eqn:uncorrupted}).  In addition, setting $t=k-1$ does not guarantee that the
+formula is unsatisfiable.  Indeed, we found some instances where there was a solution that satisfied $m-k+1$ constraints.
+
+By analyzing the CNF file, it is
+possible to discern the sample sets $S_j$ and the values of the noisy
+samples $\bm{y}'$.  The values of $\bm{s}$ and $\bm{r}$, however,
+remain hidden, except as comments at the start of the file.
+
+Crawford suggests choosing $n$ to be a multiple of 4 and letting
+$m = 2n$ and $k = m/8 = n/4$.  Our benchmark files were all generated under
+those conditions.
+
+\section{Provided files}
+
+The generator \texttt{mdp-gen.py} and an associated README file are
+located in the \texttt{src} subdirectory.  This directory also
+contains a program \texttt{mdp-check.py}.  Given a \texttt{.cnf} file
+generated by \texttt{mdp-gen.py} and the output of a successful run of
+a SAT solver, it can check that the solution for the input variables
+representing $\bm{s}$ indeed satisfies at least $m-k$ of the equations of (\ref{eqn:uncorrupted}).
+The supplied benchmark files were generated by running the script
+\texttt{generate.sh} in the \texttt{src} subdirectory.
+
+There are 30 files: five satisfiable and five unsatisfiable instances
+for $n \in \{28, 32, 36\}$, generated using five different random
+seeds.  The seeds were adjusted so that the 15 instances generated
+with $t=k-1$ are all unsatisfiable, as is discussed below.
+
+We tested these benchmarks using the
+\kissat{}~\cite{biere-kissat-2020} CDCL solver.  Measurements were
+peformed on a 3.2~GHz Apple M1~Max processor with 64~GB of memory and
+running the OS~X operating system, with a time limit of 5000 seconds
+per run.  For $n=28$, \Kissat{} can easily handle both the satisfiable
+and the unsatisfiable instances, with times ranging from
+30 to 900 seconds.  For the satisfiable instances with $n=32$, it can
+solve some in just 30 seconds, but times out for two of the five
+runs.  It times out on all unsatisfiable instances for $n=32$, and
+it times out on all satisfiable and unsatisfiable instances for
+$n=36$.
+
+We also tested the benchmarks with \cms{}, a CDCL solver augmented
+with the ability to perform Gauss-Jordan elimination on parity
+constraints~\cite{crypto}.  It can easily handle all satisfiable
+instances, never requiring more than 90 seconds.  When not required to
+generate a proof of unsatisfiability, it can also easily handle all of
+the unsatisfiable instances.  That is how we ensured that the instances
+with $t=k-1$ are unsatisfiable.
+Currently, \cms{} cannot generate DRAT proofs of
+unsatisfiability when it uses Gauss-Jordan elimination, 
+and so it fares no better than \kissat{} on the
+unsatisfiable instances when proof generation is required.
+
+\newpage
+
+\Cms{} can scale to $n=60$ without
+difficulty.  Nonetheless, the problem is still NP-hard, and so even
+\cms{} only pushes the boundary before exponential scaling limits
+feasibility.  
+
+\bibliography{mdp}
+\end{document}
